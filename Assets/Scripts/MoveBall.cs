@@ -1,6 +1,17 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.Experimental.PlayerLoop;
+using Random = UnityEngine.Random;
+
+public enum Player
+{
+	Left,
+	Right,
+	None
+};
 
 public class MoveBall : MonoBehaviour
 {
@@ -10,14 +21,17 @@ public class MoveBall : MonoBehaviour
 	public Canvas canvas;
 
 	private Rigidbody2D _rb;
-	private Scoreboard _sb;
+	private List<Action<Player>> callbacks;
 
-	// Use this for initialization
+	private void Awake()
+	{
+		this.callbacks = new List<Action<Player>>();
+		this._rb = gameObject.GetComponent<Rigidbody2D>();
+	}
+
 	void Start()
 	{
-		this._rb = gameObject.GetComponent<Rigidbody2D>();
-		this._sb = canvas.GetComponent<Scoreboard>();
-		this.Reset();
+		this.ResetPosition();
 	}
 
 	private void NormalizeVelocity()
@@ -41,31 +55,42 @@ public class MoveBall : MonoBehaviour
 
 	private void OnTriggerEnter2D(Collider2D other)
 	{
+		Player player = Player.None; 
 		switch (other.name)
 		{
 			case "Left":
-				this._sb.Right();
+				player = Player.Right;
 				break;
 			case "Right":
-				this._sb.Left();
+				player = Player.Left;
 				break;
 		}
-
-		this.Reset();
+		foreach (var callback in this.callbacks)
+		{
+			callback(player);
+		}
 	}
 
-	void Reset()
+	public void ResetPosition()
 	{
 		this._rb.position = Vector2.zero;
 		this._rb.velocity = Vector2.zero;
+	}
 
+	public void Kickoff()
+	{
 		float angle = Random.Range(80, 100);
 		if (Random.Range(0, 2) >= 1)
 		{
 			angle += 180;
 		}
-		this._rb.MoveRotation(angle);
+		this._rb.rotation = angle;
 		this._rb.AddRelativeForce(Vector2.up * this.velocity);
 	}
-}
 
+	public void RegisterCallback(Action<Player> callback)
+	{
+		this.callbacks = new List<Action<Player>>();
+		this.callbacks.Add(callback);
+	}
+}
