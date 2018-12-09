@@ -18,7 +18,6 @@ public class MoveBall : MonoBehaviour
 	public float velocity = 15;
 	public float minVelocity = 10;
 	public float maxVelocity = 30;
-	public Canvas canvas;
 
 	private Rigidbody2D _rb;
 	private List<Action<Player>> callbacks;
